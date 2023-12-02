@@ -15,7 +15,7 @@ export class Course {
 
   @Prop({ required: true })
   @ApiProperty({
-    description: 'An array of students',
+    description: 'An array of students registered to this course',
   })
   @Prop()
   students: Student[];

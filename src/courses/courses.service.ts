@@ -1,12 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
+import { Student } from 'src/students/schemas/student.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { RegisterStudentToCourseDto } from './dto/register-student-to-course-dto';
 import { Course } from './schemas/course.schema';
 
 @Injectable()
 export class CoursesService {
-  constructor(@InjectModel(Course.name) private courseModel: Model<Course>) {}
+  constructor(
+    @InjectModel(Course.name) private courseModel: Model<Course>,
+    @InjectModel(Student.name) private studentModel: Model<Student>
+  ) {}
   create(createCourseDto: CreateCourseDto) {
     const createdCourse = new this.courseModel(createCourseDto);
     return createdCourse.save();
@@ -17,23 +26,72 @@ export class CoursesService {
   }
 
   async findOne(id: string): Promise<Course> {
-    return this.courseModel.findOne({ _id: id }).exec();
+    const isValidCourseId = mongoose.Types.ObjectId.isValid(id);
+    if (!isValidCourseId) {
+      throw new BadRequestException('Course id is invalid');
+    }
+
+    const foundCourse = await this.courseModel.findOne({ _id: id }).exec();
+    if (!foundCourse) {
+      throw new NotFoundException('Course does not exist.');
+    }
+
+    return foundCourse;
   }
 
-  // async update(
-  //   id: string,
-  //   updatePersonalTaskDto: UpdatePersonalTaskDto
-  // ): Promise<Course> {
-  //   const deletedPersonalTask = await this.courseModel
-  //     .findByIdAndUpdate({ _id: id }, updatePersonalTaskDto, { new: true })
-  //     .exec();
-  //   return deletedPersonalTask;
-  // }
+  async registerStudent(
+    id: string,
+    registerStudentToCourseDto: RegisterStudentToCourseDto
+  ): Promise<Course> {
+    const isValidCourseId = mongoose.Types.ObjectId.isValid(id);
+    if (!isValidCourseId) {
+      throw new BadRequestException('Course id is invalid');
+    }
+
+    const foundCourse = await this.courseModel.findOne({ _id: id }).exec();
+    if (!foundCourse) {
+      throw new NotFoundException('Course does not exist.');
+    }
+
+    const isValidStudnetId = mongoose.Types.ObjectId.isValid(
+      registerStudentToCourseDto.studentId
+    );
+    if (!isValidStudnetId) {
+      throw new BadRequestException('Student id is invalid');
+    }
+
+    const newStudent = await this.studentModel
+      .findOne({ _id: registerStudentToCourseDto.studentId })
+      .exec();
+
+    if (!newStudent) {
+      throw new NotFoundException('Student does not exist.');
+    }
+
+    const courseStudents = (await this.courseModel.findOne({ _id: id }).exec())
+      .students;
+    courseStudents.push(newStudent);
+    registerStudentToCourseDto.students = courseStudents;
+
+    const updatedStudent = await this.courseModel
+      .findByIdAndUpdate({ _id: id }, registerStudentToCourseDto, { new: true })
+      .exec();
+    return updatedStudent;
+  }
 
   async remove(id: string) {
-    const deletedPersonalTask = await this.courseModel
+    const isValidCourseId = mongoose.Types.ObjectId.isValid(id);
+    if (!isValidCourseId) {
+      throw new BadRequestException('Course id is invalid');
+    }
+
+    const deletedCourse = await this.courseModel
       .findByIdAndDelete({ _id: id })
       .exec();
-    return deletedPersonalTask;
+
+    if (!deletedCourse) {
+      throw new NotFoundException('Course does not exist.');
+    }
+    return deletedCourse;
   }
 }

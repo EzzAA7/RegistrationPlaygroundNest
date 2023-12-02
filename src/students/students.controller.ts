@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import {
@@ -23,14 +31,23 @@ export class StudentsController {
   })
   create(@Body() createStudentDto: CreateStudentDto) {
     createStudentDto.createdAt = new Date();
-    return this.studentsService.create(createStudentDto);
+
+    try {
+      return this.studentsService.create(createStudentDto);
+    } catch (error) {
+      throw new BadRequestException('Failed trying to add the student.');
+    }
   }
 
   @Get()
   @ApiOperation({ summary: 'Find all students' })
   @ApiOkResponse({ status: 200, description: 'Found all students' })
   findAll() {
-    return this.studentsService.findAll();
+    try {
+      return this.studentsService.findAll();
+    } catch (error) {
+      throw new BadRequestException('Failed when trying to find the students.');
+    }
   }
 
   @Get(':id')
@@ -38,6 +55,10 @@ export class StudentsController {
   @ApiParam({ name: 'id', description: 'Id of the student' })
   @ApiOkResponse({ status: 200, description: 'Found the student' })
   findOne(@Param('id') id: string) {
-    return this.studentsService.findOne(id);
+    try {
+      return this.studentsService.findOne(id);
+    } catch (error) {
+      throw new NotFoundException('Failed when trying to find the student.');
+    }
   }
 }
