@@ -12,6 +12,7 @@ export class CoursesService {
     @InjectModel(Course.name) private courseModel: Model<Course>,
     @InjectModel(Student.name) private studentModel: Model<Student>
   ) {}
+
   create(createCourseDto: CreateCourseDto) {
     const createdCourse = new this.courseModel(createCourseDto);
     return createdCourse.save();
@@ -31,14 +32,35 @@ export class CoursesService {
   }
 
   async registerStudent(
-    id: string,
+    courseId: string,
     registerStudentToCourseDto: RegisterStudentToCourseDto
   ): Promise<Course> {
+    const newStudent = await this.getNewStudent(registerStudentToCourseDto);
+    const courseStudents: Student[] = await this.getCourseStudents(courseId);
+
+    courseStudents.push(newStudent);
+    registerStudentToCourseDto.students = courseStudents;
+
+    return await this.courseModel
+      .findByIdAndUpdate({ _id: courseId }, registerStudentToCourseDto, {
+        new: true,
+      })
+      .exec();
+  }
+
+  private async getCourseStudents(id: string) {
     const foundCourse = await this.courseModel.findOne({ _id: id }).exec();
     if (!foundCourse) {
       throw new NotFoundException('Course does not exist.');
     }
 
+    const courseStudents = foundCourse.students;
+    return courseStudents;
+  }
+
+  private async getNewStudent(
+    registerStudentToCourseDto: RegisterStudentToCourseDto
+  ) {
     const newStudent = await this.studentModel
       .findOne({ _id: registerStudentToCourseDto.studentId })
       .exec();
@@ -46,16 +68,7 @@ export class CoursesService {
     if (!newStudent) {
       throw new NotFoundException('Student does not exist.');
     }
-
-    const courseStudents = (await this.courseModel.findOne({ _id: id }).exec())
-      .students;
-    courseStudents.push(newStudent);
-    registerStudentToCourseDto.students = courseStudents;
-
-    const updatedStudent = await this.courseModel
-      .findByIdAndUpdate({ _id: id }, registerStudentToCourseDto, { new: true })
-      .exec();
-    return updatedStudent;
+    return newStudent;
   }
 
   async remove(id: string) {
