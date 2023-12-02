@@ -19,6 +19,9 @@ import {
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { RegisterStudentToCourseDto } from './dto/register-student-to-course-dto';
+import { FindOneParams } from './params/find-one-params';
+import { RegisterStudentToCourseParams } from './params/register-student-to-course-params';
+import { RemoveOneParams } from './params/remove-one-params';
 import { Course } from './schemas/course.schema';
 
 @ApiTags('courses')
@@ -58,9 +61,9 @@ export class CoursesController {
   @ApiOperation({ summary: 'Find a course' })
   @ApiParam({ name: 'id', description: 'Id of the course' })
   @ApiOkResponse({ status: 200, description: 'Found the course' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param() params: FindOneParams) {
     try {
-      return this.coursesService.findOne(id);
+      return this.coursesService.findOne(params.id);
     } catch (error) {
       throw new NotFoundException('Failed when trying to find the course.');
     }
@@ -71,11 +74,11 @@ export class CoursesController {
   @ApiParam({ name: 'id', description: 'Id of the course' })
   @ApiOkResponse({ status: 200, description: 'Registered the student' })
   registerStudent(
-    @Param('id') id: string,
+    @Param() params: RegisterStudentToCourseParams,
     @Body() updateCourseDto: RegisterStudentToCourseDto
   ) {
     try {
-      return this.coursesService.registerStudent(id, updateCourseDto);
+      return this.coursesService.registerStudent(params.id, updateCourseDto);
     } catch (error) {
       throw new BadRequestException(
         'Failed when trying to register the student to course, please provide a correct course & student.'
@@ -87,9 +90,9 @@ export class CoursesController {
   @ApiOperation({ summary: 'Delete the course' })
   @ApiParam({ name: 'id', description: 'Id of the course' })
   @ApiOkResponse({ status: 200, description: 'Deleted the course' })
-  remove(@Param('id') id: string) {
+  remove(@Param() params: RemoveOneParams) {
     try {
-      return this.coursesService.remove(id);
+      return this.coursesService.remove(params.id);
     } catch (error) {
       throw new BadRequestException('Failed while trying to remove the course');
     }

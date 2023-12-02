@@ -1,10 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { Student } from 'src/students/schemas/student.schema';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { RegisterStudentToCourseDto } from './dto/register-student-to-course-dto';
@@ -26,11 +22,6 @@ export class CoursesService {
   }
 
   async findOne(id: string): Promise<Course> {
-    const isValidCourseId = mongoose.Types.ObjectId.isValid(id);
-    if (!isValidCourseId) {
-      throw new BadRequestException('Course id is invalid');
-    }
-
     const foundCourse = await this.courseModel.findOne({ _id: id }).exec();
     if (!foundCourse) {
       throw new NotFoundException('Course does not exist.');
@@ -43,21 +34,9 @@ export class CoursesService {
     id: string,
     registerStudentToCourseDto: RegisterStudentToCourseDto
   ): Promise<Course> {
-    const isValidCourseId = mongoose.Types.ObjectId.isValid(id);
-    if (!isValidCourseId) {
-      throw new BadRequestException('Course id is invalid');
-    }
-
     const foundCourse = await this.courseModel.findOne({ _id: id }).exec();
     if (!foundCourse) {
       throw new NotFoundException('Course does not exist.');
-    }
-
-    const isValidStudnetId = mongoose.Types.ObjectId.isValid(
-      registerStudentToCourseDto.studentId
-    );
-    if (!isValidStudnetId) {
-      throw new BadRequestException('Student id is invalid');
     }
 
     const newStudent = await this.studentModel
@@ -80,11 +59,6 @@ export class CoursesService {
   }
 
   async remove(id: string) {
-    const isValidCourseId = mongoose.Types.ObjectId.isValid(id);
-    if (!isValidCourseId) {
-      throw new BadRequestException('Course id is invalid');
-    }
-
     const deletedCourse = await this.courseModel
       .findByIdAndDelete({ _id: id })
       .exec();
