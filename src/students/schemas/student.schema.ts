@@ -23,6 +23,8 @@ export class Student {
 
   @Prop()
   lastModifiedAt: Date;
+
+  _id: string;
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student);

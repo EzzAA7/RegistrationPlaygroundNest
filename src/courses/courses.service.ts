@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Student } from 'src/students/schemas/student.schema';
@@ -36,11 +40,27 @@ export class CoursesService {
     registerStudentToCourseDto: RegisterStudentToCourseDto
   ): Promise<Course> {
     const newStudent = await this.getNewStudent(registerStudentToCourseDto);
-    const courseStudents: Student[] = await this.getCourseStudents(courseId);
+    const courseStudents = await this.getCourseStudents(courseId);
+
+    const hasStudent = await courseStudents.some(
+      (student) => student._id.toString() == newStudent._id
+    );
+    if (hasStudent) {
+      throw new BadRequestException(
+        'Student is already registered to this course.'
+      );
+    }
 
     courseStudents.push(newStudent);
     registerStudentToCourseDto.students = courseStudents;
 
+    return await this.updateCourse(courseId, registerStudentToCourseDto);
+  }
+
+  private async updateCourse(
+    courseId: string,
+    registerStudentToCourseDto: RegisterStudentToCourseDto
+  ): Promise<Course> {
     return await this.courseModel
       .findByIdAndUpdate({ _id: courseId }, registerStudentToCourseDto, {
         new: true,
