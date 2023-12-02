@@ -17,6 +17,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Student } from './schemas/student.schema';
+import { FindOneParams } from './params/find-one-params';
 
 @ApiTags('students')
 @Controller('students')
@@ -54,9 +55,9 @@ export class StudentsController {
   @ApiOperation({ summary: 'Find a student' })
   @ApiParam({ name: 'id', description: 'Id of the student' })
   @ApiOkResponse({ status: 200, description: 'Found the student' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param() params: FindOneParams) {
     try {
-      return this.studentsService.findOne(id);
+      return this.studentsService.findOne(params.id);
     } catch (error) {
       throw new NotFoundException('Failed when trying to find the student.');
     }

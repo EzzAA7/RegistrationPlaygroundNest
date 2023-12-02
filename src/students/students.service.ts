@@ -1,10 +1,6 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { Student } from './schemas/student.schema';
 
@@ -24,11 +20,6 @@ export class StudentsService {
   }
 
   async findOne(id: string): Promise<Student> {
-    const isValidStudentId = mongoose.Types.ObjectId.isValid(id);
-    if (!isValidStudentId) {
-      throw new BadRequestException('Student id is invalid');
-    }
-
     const foundStudent = await this.studentModel.findOne({ _id: id }).exec();
     if (!foundStudent) {
       throw new NotFoundException('Student does not exist.');
